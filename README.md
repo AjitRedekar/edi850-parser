@@ -1,0 +1,1 @@
+parse_850.py is a Python script that parses EDI 850 Purchase Order files. It extracts relevant information from the EDI file and converts it into a more readable format, such as CSV or JSON. The script can handle various segments and elements of the EDI 850 standard, making it useful for businesses that need to process purchase orders electronically.
