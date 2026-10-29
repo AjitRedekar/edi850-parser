@@ -74,6 +74,10 @@ with f:
 
         if segment_id == emap.get("ship_to.name").get("segment"):
             emap.get("ship_to.name").update(
+                {"position": segment_elements.index("ST") + 1}
+            )
+
+            emap.get("ship_to.name").update(
                 {"value": segment_elements[emap.get("ship_to.name").get("position")]}
             )
 
@@ -97,73 +101,47 @@ with f:
                 {"value": segment_elements[emap.get("ship_to.zip").get("position")]}
             )
 
-        try:
-            if segment_id == emap.get("line_no").get("segment"):
-                emap.get("line_no").update(
-                    {
-                        "value": int(
-                            segment_elements[emap.get("line_no").get("position")]
-                        )
-                    }
-                )
-            if segment_id == emap.get("line_qty").get("segment"):
-                emap.get("line_qty").update(
-                    {
-                        "value": int(
-                            segment_elements[emap.get("line_qty").get("position")]
-                        )
-                    }
-                )
-            if segment_id == emap.get("line_uom").get("segment"):
-                emap.get("line_uom").update(
-                    {"value": segment_elements[emap.get("line_uom").get("position")]}
-                )
-            if segment_id == emap.get("line_price").get("segment"):
-                emap.get("line_price").update(
-                    {
-                        "value": Decimal(
-                            segment_elements[emap.get("line_price").get("position")]
-                        )
-                    }
-                )
-            if segment_id == emap.get("line_item").get("segment"):
-                emap.get("line_item").update(
-                    {"position": segment_elements.index("VP") + 1}
-                )
+        if segment_id == emap.get("line_no").get("segment"):
+            current_line = None  # forget the previous line
+            try:
+                current_line = {
+                    emap.get("line_no").get("label"): int(
+                        segment_elements[emap.get("line_no").get("position")]
+                    ),
+                    emap.get("line_qty").get("label"): int(
+                        segment_elements[emap.get("line_qty").get("position")]
+                    ),
+                    emap.get("line_uom").get("label"): segment_elements[
+                        emap.get("line_uom").get("position")
+                    ],
+                    emap.get("line_price").get("label"): Decimal(
+                        segment_elements[emap.get("line_price").get("position")]
+                    ),
+                    emap.get("line_item").get("label"): segment_elements[
+                        segment_elements.index("VP") + 1
+                    ],
+                }
+                po_lines.append(current_line)
+            except ValueError as e:
+                print(f"Line {file_line_number}: skipped PO1 ({e})")
 
-                emap.get("line_item").update(
-                    {"value": segment_elements[emap.get("line_item").get("position")]}
-                )
-            if segment_id == emap.get("line_description").get("segment"):
-                emap.get("line_description").update(
-                    {
-                        "value": segment_elements[
-                            emap.get("line_description").get("position")
-                        ]
-                    }
-                )
-
-                po_lines.append(
-                    {
-                        "line_no": emap.get("line_no").get("value"),
-                        "qty": emap.get("line_qty").get("value"),
-                        "uom": emap.get("line_uom").get("value"),
-                        "price": emap.get("line_price").get("value"),
-                        "item": emap.get("line_item").get("value"),
-                        "description": emap.get("line_description").get("value"),
-                    }
-                )
-
-        except ValueError as e:
-            print(f"Line {file_line_number}: skipped PO1, bad value ({e})")
+        elif (
+            segment_id == emap.get("line_description").get("segment")
+            and current_line is not None
+        ):
+            current_line[emap.get("line_description").get("label")] = segment_elements[
+                emap.get("line_description").get("position")
+            ]
 
 
 po_header.append(
     {
         emap.get("po_number").get("label"): emap.get("po_number").get("value"),
         emap.get("po_date").get("label"): emap.get("po_date").get("value"),
-        emap.get("ship_to.name").get("label"): emap.get("ship_to.name").get("position"),
         "ship_to": {
+            emap.get("ship_to.name")
+            .get("label"): emap.get("ship_to.name")
+            .get("value"),
             emap.get("ship_to.address")
             .get("label"): emap.get("ship_to.address")
             .get("value"),
