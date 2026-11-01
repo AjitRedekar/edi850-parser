@@ -7,7 +7,7 @@ import uuid
 EDI850_order_header_map = {
     ("BEG", 2, "str"): ("po_number",),
     ("BEG", 4, "date"): ("po_date",),
-    ("N1", None, "after:ST"): (
+    ("N1", 1, "if:ST"): (
         "ship_to",
         "name",
     ),
@@ -38,9 +38,6 @@ EDI850_order_detail_map = {
     ("PID", 4, "str"): ("description",),
 }
 
-# po_lines = []
-order = {"guid": None, "po_number": None, "po_date": None, "ship_to": {}, "lines": []}
-
 
 def parse_segment(line):
     """Return (segment_id, elements) for an EDI line, or (None, None) if blank."""
@@ -54,16 +51,13 @@ def parse_segment(line):
 def print_po_lines(po_lines):
     """Print PO1 details as an aligned table."""
     print(f"{'Line':>4} {'Qty':>5} {'UOM':<4} {'Price':>8} {'Cost':>10}")
-    for line_count, po_line in enumerate(po_lines):
-        if po_line == None:
-            continue
-        else:
-            print(
-                f"{po_line.get('line_no'):>4} {po_line.get('qty'):>5} {po_line.get('uom'):<4} {po_line.get('price'):>8.2f} {po_line.get('qty') * po_line.get('price'):>10.2f}"
-            )  # total price
+    for po_line in po_lines:
+        print(
+            f"{po_line.get('line_no'):>4} {po_line.get('qty'):>5} {po_line.get('uom'):<4} {po_line.get('price'):>8.2f} {po_line.get('qty') * po_line.get('price'):>10.2f}"
+        )  # total price
 
 
-def map_order_header(segment_id, segment_elements, file_line_number):
+def map_order_header(order, segment_id, segment_elements, file_line_number):
 
     for (segment, position, el_type), element in EDI850_order_header_map.items():
         if segment_id == segment:
@@ -78,14 +72,12 @@ def map_order_header(segment_id, segment_elements, file_line_number):
                 except ValueError as e:
                     print(f"Line {file_line_number}: skipped {segment_id} ({e})")
             else:
-                if el_type.startswith("after:"):
+                if el_type.startswith("if:"):
                     qualifier = el_type.split(":")[1]
-                    order[element[0]][element[1]] = segment_elements[
-                        segment_elements.index(qualifier) + 1
-                    ]
+                    if segment_elements[0] == qualifier:
+                        order[element[0]][element[1]] = segment_elements[position]
                 else:
                     order[element[0]][element[1]] = segment_elements[position]
-    return order
 
 
 def map_order_detail(segment_id, segment_elements, this_line, file_line_number):
@@ -123,15 +115,6 @@ def is_850_file(segment_id, segment_elements):
 
 def parse_850(file_path):
 
-    this_line = {
-        "line_no": None,
-        "qty": None,
-        "uom": None,
-        "price": None,
-        "item": None,
-        "description": None,
-    }
-
     order = {
         "guid": None,
         "po_number": None,
@@ -141,7 +124,6 @@ def parse_850(file_path):
     }
     po_lines = []
 
-    po_lines.clear()  # Clear the list of PO lines before parsing a new file
     current_line = None
 
     try:
@@ -167,21 +149,16 @@ def parse_850(file_path):
                     ):
                         po_lines.append(this_line)
                     else:
-                        print(
-                            f"Line {file_line_number}: skipped PO1 segment due to mapping error."
-                        )
                         this_line = None
+
                 elif segment_id == "PID" and this_line is not None:
                     map_order_detail(
                         segment_id, segment_elements, this_line, file_line_number
                     )
-                    po_lines[-1] = (
-                        this_line  # Update the last line with the description
-                    )
 
                 else:
-                    order = map_order_header(
-                        segment_id, segment_elements, file_line_number
+                    map_order_header(
+                        order, segment_id, segment_elements, file_line_number
                     )
 
     if is_format_850:

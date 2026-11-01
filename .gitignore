@@ -1,6 +1,3 @@
 .venv/
 __pycache__/
 order.json
-Strings.py
-hello.py
-read850file.py
