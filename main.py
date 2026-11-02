@@ -20,14 +20,14 @@ if __name__ == "__main__":
         pi_input_file = sys.argv[1]
         pi_output_file = sys.argv[2] if len(sys.argv) > 2 else "order.json"
 
-    except IndexError as e:
+    except IndexError:
         print(
             f"Missing input 850 file path as parameter. Usage: {sys.argv[0]} <path_to_850_file>"
         )
         raise SystemExit(1)  # Exit the program if no file path is provided
 
     try:
-        order = parse_850(pi_input_file)  # "d:/GetAI/sample.850")
+        order = parse_850(pi_input_file)
     except OSError as e:
         print(f"File Access Error: {e}")
         raise SystemExit(1)  # Exit the program if the file is not found

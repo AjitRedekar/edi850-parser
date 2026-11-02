@@ -1,4 +1,4 @@
-EDI850_order_header_map = {
+EDI850_ORDER_HEADER_MAP = {
     ("BEG", 2, "str"): ("po_number",),
     ("BEG", 4, "date"): ("po_date",),
     ("N1", 1, "if:ST"): (
@@ -23,7 +23,7 @@ EDI850_order_header_map = {
     ),
 }
 
-EDI850_order_detail_map = {
+EDI850_ORDER_DETAIL_MAP = {
     ("PO1", 0, "int"): ("line_no",),
     ("PO1", 1, "int"): ("qty",),
     ("PO1", 2, "str"): ("uom",),

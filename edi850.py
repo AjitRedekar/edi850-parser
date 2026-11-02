@@ -1,10 +1,10 @@
-# regulat import
+# standard library imports
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 import uuid
 
 # custom imports
-from edi_maps import EDI850_order_header_map, EDI850_order_detail_map
+from edi_maps import EDI850_ORDER_HEADER_MAP, EDI850_ORDER_DETAIL_MAP
 
 
 def parse_segment(line):
@@ -17,8 +17,8 @@ def parse_segment(line):
 
 
 def map_order_header(order, segment_id, segment_elements, file_line_number):
-
-    for (segment, position, el_type), element in EDI850_order_header_map.items():
+    """Map 850 header segments to the order dictionary based on the header mapping."""
+    for (segment, position, el_type), element in EDI850_ORDER_HEADER_MAP.items():
         if segment_id == segment:
             try:
                 if len(element) == 1:
@@ -42,8 +42,8 @@ def map_order_header(order, segment_id, segment_elements, file_line_number):
 
 
 def map_order_detail(segment_id, segment_elements, current_line, file_line_number):
-
-    for (segment, position, el_type), element in EDI850_order_detail_map.items():
+    """Map 850 detail segments to the current line dictionary based on the detail mapping."""
+    for (segment, position, el_type), element in EDI850_ORDER_DETAIL_MAP.items():
         if segment_id == segment:
             if len(element) == 1:
                 try:
@@ -75,7 +75,7 @@ def is_850_file(segment_id, segment_elements):
 
 
 def parse_850(file_path):
-
+    """Parse an 850 EDI file and return a structured order dictionary."""
     order = {
         "guid": None,
         "po_number": None,
