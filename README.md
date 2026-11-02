@@ -3,7 +3,7 @@ parse_850.py is a Python script that parses EDI 850 Purchase Order files.
 * The script can handle various segments and elements of the EDI 850 standard, 
     making it useful for businesses that need to process purchase orders electronically.
 * for each document it generates GUID value in the format of GU_unique id.
-* know limitation: 
+* known limitation: 
   ** the script is designed to parse only one EDI 850 document at a time.
   ** the script parse only ship to address, it does not parse bill to address.
   ** EDI 850 document is expected to be in format X12 004010 with * and ~ delimiters
