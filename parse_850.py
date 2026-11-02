@@ -69,7 +69,7 @@ def map_order_header(order, segment_id, segment_elements, file_line_number):
                         ).date()  # convert to date object
                     else:
                         order[element[0]] = segment_elements[position]
-                except ValueError as e:
+                except (ValueError, IndexError) as e:
                     print(f"Line {file_line_number}: skipped {segment_id} ({e})")
             else:
                 if el_type.startswith("if:"):
@@ -80,25 +80,25 @@ def map_order_header(order, segment_id, segment_elements, file_line_number):
                     order[element[0]][element[1]] = segment_elements[position]
 
 
-def map_order_detail(segment_id, segment_elements, this_line, file_line_number):
+def map_order_detail(segment_id, segment_elements, current_line, file_line_number):
 
     for (segment, position, el_type), element in EDI850_order_detail_map.items():
         if segment_id == segment:
             if len(element) == 1:
                 try:
                     if el_type == "int":
-                        this_line[element[0]] = int(segment_elements[position])
+                        current_line[element[0]] = int(segment_elements[position])
                     elif el_type == "decimal":
-                        this_line[element[0]] = Decimal(segment_elements[position])
+                        current_line[element[0]] = Decimal(segment_elements[position])
                     elif el_type.startswith("after:"):
                         qualifier = el_type.split(":")[1]
-                        this_line[element[0]] = segment_elements[
+                        current_line[element[0]] = segment_elements[
                             segment_elements.index(qualifier) + 1
                         ]
                     else:
-                        this_line[element[0]] = segment_elements[position]
+                        current_line[element[0]] = segment_elements[position]
 
-                except (ValueError, InvalidOperation) as e:
+                except (ValueError, InvalidOperation, IndexError) as e:
                     print(f"Line {file_line_number}: skipped PO1 ({e})")
                     return False
     return True
@@ -126,13 +126,11 @@ def parse_850(file_path):
 
     current_line = None
 
-    try:
-        f = open(file_path)
-    except FileNotFoundError as e1:
-        print(f"File Access Error: {e1}")
-        raise SystemExit(1)  # Exit the program if the file is not found
+    f = open(file_path)
 
     is_format_850 = False
+    address_type = None
+
     with f:
         for file_line_number, line in enumerate(f, start=1):
 
@@ -142,20 +140,27 @@ def parse_850(file_path):
             elif segment_id == "ST":
                 is_format_850 = is_850_file(segment_id, segment_elements)
             elif is_format_850:
+
                 if segment_id == "PO1":
-                    this_line = {}
+                    current_line = {}
                     if map_order_detail(
-                        segment_id, segment_elements, this_line, file_line_number
+                        segment_id, segment_elements, current_line, file_line_number
                     ):
-                        po_lines.append(this_line)
+                        po_lines.append(current_line)
                     else:
-                        this_line = None
+                        current_line = None
 
-                elif segment_id == "PID" and this_line is not None:
+                elif segment_id == "PID" and current_line is not None:
                     map_order_detail(
-                        segment_id, segment_elements, this_line, file_line_number
+                        segment_id, segment_elements, current_line, file_line_number
                     )
-
+                elif segment_id == "N1":
+                    address_type = segment_elements[0]
+                    map_order_header(
+                        order, segment_id, segment_elements, file_line_number
+                    )
+                elif segment_id in ["N3", "N4"] and address_type != "ST":
+                    continue
                 else:
                     map_order_header(
                         order, segment_id, segment_elements, file_line_number
@@ -182,7 +187,12 @@ if __name__ == "__main__":
         )
         raise SystemExit(1)  # Exit the program if no file path is provided
 
-    order = parse_850(pi_input_file)  # "d:/GetAI/sample.850")
+    try:
+        order = parse_850(pi_input_file)  # "d:/GetAI/sample.850")
+    except FileNotFoundError as e:
+        print(f"File Access Error: {e}")
+        raise SystemExit(1)  # Exit the program if the file is not found
+
     if order is None:
         print(f"File {pi_input_file} is not a valid 850 EDI file.")
         raise SystemExit(1)  # Exit the program if the file is not a valid 850 EDI file
