@@ -14,9 +14,10 @@ call example:
 
 ```bash
     python parse_850.py "sample.850"
+```
 
-'''json
 //output example:
+'''json
 {
   "guid": "GU_e2b25ea5-1b8c-4ed9-b910-7ccb5358b156",
   "po_number": "4500123456",
@@ -55,3 +56,4 @@ call example:
     }
   ]
 }
+```
