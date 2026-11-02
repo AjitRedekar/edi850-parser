@@ -8,12 +8,19 @@ parse_850.py is a Python script that parses EDI 850 Purchase Order files.
   - the script parse only ship to address, it does not parse bill to address.
   - EDI 850 document is expected to be in format X12 004010 with * and ~ delimiters
 
+* program structure:
+edi850-parser/
+├── edi_maps.py      # the two map dictionaries only
+├── edi850.py        # parse_segment, map_order_header, map_order_detail, is_850_file, parse_850
+└── main.py          # the __main__ part: arguments, print_po_lines, JSON output
+
+
 call example:
 1st parameter is the path to the EDI 850 file to be parsed.
 2nd parameter is optional, if provided it will be the path to the output JSON file. If not provided, the default output file will be named "order.json".
 
 ```bash
-    python parse_850.py "sample.850"
+    python main.py "sample.850"
 ```
 
 output example:
