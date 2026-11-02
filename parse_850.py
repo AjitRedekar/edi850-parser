@@ -61,23 +61,25 @@ def map_order_header(order, segment_id, segment_elements, file_line_number):
 
     for (segment, position, el_type), element in EDI850_order_header_map.items():
         if segment_id == segment:
-            if len(element) == 1:
-                try:
+            try:
+                if len(element) == 1:
+
                     if el_type == "date":
                         order[element[0]] = datetime.strptime(
                             segment_elements[position], "%Y%m%d"
                         ).date()  # convert to date object
                     else:
                         order[element[0]] = segment_elements[position]
-                except (ValueError, IndexError) as e:
-                    print(f"Line {file_line_number}: skipped {segment_id} ({e})")
-            else:
-                if el_type.startswith("if:"):
-                    qualifier = el_type.split(":")[1]
-                    if segment_elements[0] == qualifier:
-                        order[element[0]][element[1]] = segment_elements[position]
+
                 else:
-                    order[element[0]][element[1]] = segment_elements[position]
+                    if el_type.startswith("if:"):
+                        qualifier = el_type.split(":")[1]
+                        if segment_elements[0] == qualifier:
+                            order[element[0]][element[1]] = segment_elements[position]
+                    else:
+                        order[element[0]][element[1]] = segment_elements[position]
+            except (ValueError, IndexError) as e:
+                print(f"Line {file_line_number}: skipped {segment_id} ({e})")
 
 
 def map_order_detail(segment_id, segment_elements, current_line, file_line_number):
@@ -155,7 +157,8 @@ def parse_850(file_path):
                         segment_id, segment_elements, current_line, file_line_number
                     )
                 elif segment_id == "N1":
-                    address_type = segment_elements[0]
+                    address_type = segment_elements[0] if segment_elements else None
+
                     map_order_header(
                         order, segment_id, segment_elements, file_line_number
                     )
@@ -189,7 +192,7 @@ if __name__ == "__main__":
 
     try:
         order = parse_850(pi_input_file)  # "d:/GetAI/sample.850")
-    except FileNotFoundError as e:
+    except OSError as e:
         print(f"File Access Error: {e}")
         raise SystemExit(1)  # Exit the program if the file is not found
 
