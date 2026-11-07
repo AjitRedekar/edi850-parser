@@ -1,0 +1,30 @@
+{
+  "po_number": "4500123456",
+  "po_date": "2026-10-23",
+  "ship_to": {
+    "name": "ACME RETAIL DC 7",
+    "address": "1200 INDUSTRIAL PKWY",
+    "city": "COLUMBUS",
+    "state": "OH",
+    "zip": "43215"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "qty": 24,
+      "uom": "EA",
+      "price": "12.50",
+      "item": "WC-1001",
+      "description": "BLUE WIDGET 10MM"
+    },
+    {
+      "line_no": 2,
+      "qty": 10,
+      "uom": "CA",
+      "price": "48.00",
+      "item": "WC-2040",
+      "description": "WIDGET MOUNTING KIT"
+    }
+  ],
+  "guid": "GU_8ac5d8ed-02a4-4479-81fb-96b57578b1e4"
+}
