@@ -5,6 +5,7 @@ import uuid
 
 # custom imports
 from edi_maps import EDI850_ORDER_HEADER_MAP, EDI850_ORDER_DETAIL_MAP
+from models import Order, OrderLine
 
 
 def parse_segment(line):
@@ -24,19 +25,25 @@ def map_order_header(order, segment_id, segment_elements, file_line_number):
                 if len(element) == 1:
 
                     if el_type == "date":
-                        order[element[0]] = datetime.strptime(
-                            segment_elements[position], "%Y%m%d"
-                        ).date()  # convert to date object
+                        setattr(
+                            order,
+                            element[0],
+                            datetime.strptime(
+                                segment_elements[position], "%Y%m%d"
+                            ).date(),
+                        )  # convert to date object
                     else:
-                        order[element[0]] = segment_elements[position]
+                        setattr(order, element[0], segment_elements[position])
 
                 else:
                     if el_type.startswith("if:"):
                         qualifier = el_type.split(":")[1]
                         if segment_elements[0] == qualifier:
-                            order[element[0]][element[1]] = segment_elements[position]
+                            target_attr = getattr(order, element[0])
+                            setattr(target_attr, element[1], segment_elements[position])
                     else:
-                        order[element[0]][element[1]] = segment_elements[position]
+                        target_attr = getattr(order, element[0])
+                        setattr(target_attr, element[1], segment_elements[position])
             except (ValueError, IndexError) as e:
                 print(f"Line {file_line_number}: skipped {segment_id} ({e})")
 
@@ -48,16 +55,24 @@ def map_order_detail(segment_id, segment_elements, current_line, file_line_numbe
             if len(element) == 1:
                 try:
                     if el_type == "int":
-                        current_line[element[0]] = int(segment_elements[position])
+                        setattr(
+                            current_line, element[0], int(segment_elements[position])
+                        )
                     elif el_type == "decimal":
-                        current_line[element[0]] = Decimal(segment_elements[position])
+                        setattr(
+                            current_line,
+                            element[0],
+                            Decimal(segment_elements[position]),
+                        )
                     elif el_type.startswith("after:"):
                         qualifier = el_type.split(":")[1]
-                        current_line[element[0]] = segment_elements[
-                            segment_elements.index(qualifier) + 1
-                        ]
+                        setattr(
+                            current_line,
+                            element[0],
+                            segment_elements[segment_elements.index(qualifier) + 1],
+                        )
                     else:
-                        current_line[element[0]] = segment_elements[position]
+                        setattr(current_line, element[0], segment_elements[position])
 
                 except (ValueError, InvalidOperation, IndexError) as e:
                     print(f"Line {file_line_number}: skipped PO1 ({e})")
@@ -76,16 +91,19 @@ def is_850_file(segment_id, segment_elements):
 
 def parse_850(file_path):
     """Parse an 850 EDI file and return a structured order dictionary."""
-    order = {
-        "guid": None,
-        "po_number": None,
-        "po_date": None,
-        "ship_to": {},
-        "lines": [],
-    }
-    po_lines = []
+    # order = {
+    #     "guid": None,
+    #     "po_number": None,
+    #     "po_date": None,
+    #     "ship_to": {},
+    #     "lines": [],
+    # }
 
-    current_line = None
+    order = Order()
+
+    po_lines = [OrderLine()]  # Initialize with a single OrderLine instance
+
+    # current_line = None
 
     f = open(file_path)
 
@@ -103,11 +121,14 @@ def parse_850(file_path):
             elif is_format_850:
 
                 if segment_id == "PO1":
-                    current_line = {}
+                    # current_line = {}
+                    current_line = OrderLine()
+
                     if map_order_detail(
                         segment_id, segment_elements, current_line, file_line_number
                     ):
-                        po_lines.append(current_line)
+                        if current_line is not None:
+                            po_lines.append(current_line)
                     else:
                         current_line = None
 
@@ -118,8 +139,13 @@ def parse_850(file_path):
                 elif segment_id == "N1":
                     address_type = segment_elements[0] if segment_elements else None
 
-                    map_order_header(
-                        order, segment_id, segment_elements, file_line_number
+                    # map_order_header(
+                    #     order, segment_id, segment_elements, file_line_number
+                    # )
+                    order.ship_to.name = (
+                        segment_elements[1]
+                        if address_type == "ST" and len(segment_elements) > 1
+                        else None
                     )
                 elif segment_id in ["N3", "N4"] and address_type != "ST":
                     continue
@@ -129,10 +155,9 @@ def parse_850(file_path):
                     )
 
     if is_format_850:
-        order["guid"] = "GU_" + str(
-            uuid.uuid4()
-        )  # Generate a unique GUID for the order
-        order["lines"] = po_lines
+        order.guid = "GU_" + str(uuid.uuid4())  # Generate a unique GUID for the order
+        order.lines = po_lines
+
         return order
     else:
         return None  # Return None if the file is not a valid 850 EDI file

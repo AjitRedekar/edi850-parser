@@ -1,17 +1,21 @@
 # standard library imports
 import sys
 import json
+from dataclasses import asdict
 
 # custom imports
 from edi850 import parse_850
+from models import Order, OrderLine
 
 
 def print_po_lines(po_lines):
     """Print PO1 details as an aligned table."""
+
     print(f"{'Line':>4} {'Qty':>5} {'UOM':<4} {'Price':>8} {'Cost':>10}")
-    for po_line in po_lines:
+    po_line = OrderLine(**line)
+    for line in po_lines if isinstance(line, dict) else po_lines:
         print(
-            f"{po_line.get('line_no'):>4} {po_line.get('qty'):>5} {po_line.get('uom'):<4} {po_line.get('price'):>8.2f} {po_line.get('qty') * po_line.get('price'):>10.2f}"
+            f"{po_line.line_no:>4} {po_line.qty:>5} {po_line.uom:<4} {po_line.price:>8.2f} {po_line.extended_value :>10.2f}"
         )  # total price
 
 
@@ -27,6 +31,7 @@ if __name__ == "__main__":
         raise SystemExit(1)  # Exit the program if no file path is provided
 
     try:
+        order = Order()
         order = parse_850(pi_input_file)
     except OSError as e:
         print(f"File Access Error: {e}")
@@ -37,9 +42,9 @@ if __name__ == "__main__":
         raise SystemExit(1)  # Exit the program if the file is not a valid 850 EDI file
 
     print(
-        f"Total lines processed: {len(order['lines'])} for PO number: {order['po_number']} under guid: {order['guid']}"
+        f"Total lines processed: {len(order.lines)} for PO number: {order.po_number} under guid: {order.guid}"
     )
-    print_po_lines(order["lines"])
+    # print_po_lines(order.lines)
 
     with open(pi_output_file, "w") as out:
-        json.dump(order, out, indent=2, default=str)
+        json.dump(asdict(order), out, indent=2, default=str)
