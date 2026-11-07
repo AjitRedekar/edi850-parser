@@ -14,7 +14,7 @@ class OrderLine:
 
     def extended_value(self) -> Decimal:
         """Calculate the extended value of the order line."""
-        return self.qty * self.price | None
+        return self.qty * self.price
 
 
 @dataclass(slots=True)
@@ -31,5 +31,5 @@ class Order:
     po_number: str | None = None
     po_date: date | None = None
     ship_to: Address = field(default_factory=Address)
-    lines: list[OrderLine] = field(default_factory=OrderLine)
+    lines: list[OrderLine] = field(default_factory=list)
     guid: str | None = None

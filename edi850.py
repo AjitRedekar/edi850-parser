@@ -18,7 +18,7 @@ def parse_segment(line):
 
 
 def map_order_header(order, segment_id, segment_elements, file_line_number):
-    """Map 850 header segments to the order dictionary based on the header mapping."""
+    """Map 850 header segments to the order object based on the header mapping."""
     for (segment, position, el_type), element in EDI850_ORDER_HEADER_MAP.items():
         if segment_id == segment:
             try:
@@ -49,7 +49,7 @@ def map_order_header(order, segment_id, segment_elements, file_line_number):
 
 
 def map_order_detail(segment_id, segment_elements, current_line, file_line_number):
-    """Map 850 detail segments to the current line dictionary based on the detail mapping."""
+    """Map 850 detail segments to the current line object based on the detail mapping."""
     for (segment, position, el_type), element in EDI850_ORDER_DETAIL_MAP.items():
         if segment_id == segment:
             if len(element) == 1:
@@ -90,20 +90,13 @@ def is_850_file(segment_id, segment_elements):
 
 
 def parse_850(file_path):
-    """Parse an 850 EDI file and return a structured order dictionary."""
-    # order = {
-    #     "guid": None,
-    #     "po_number": None,
-    #     "po_date": None,
-    #     "ship_to": {},
-    #     "lines": [],
-    # }
+    """Parse an 850 EDI file and return a structured order and its lines object."""
 
     order = Order()
 
-    po_lines = [OrderLine()]  # Initialize with a single OrderLine instance
+    po_lines = []
 
-    # current_line = None
+    current_line = None
 
     f = open(file_path)
 
@@ -121,7 +114,7 @@ def parse_850(file_path):
             elif is_format_850:
 
                 if segment_id == "PO1":
-                    # current_line = {}
+
                     current_line = OrderLine()
 
                     if map_order_detail(
@@ -132,21 +125,17 @@ def parse_850(file_path):
                     else:
                         current_line = None
 
-                elif segment_id == "PID" and current_line is not None:
+                elif segment_id == "PID":
                     map_order_detail(
                         segment_id, segment_elements, current_line, file_line_number
                     )
                 elif segment_id == "N1":
                     address_type = segment_elements[0] if segment_elements else None
 
-                    # map_order_header(
-                    #     order, segment_id, segment_elements, file_line_number
-                    # )
-                    order.ship_to.name = (
-                        segment_elements[1]
-                        if address_type == "ST" and len(segment_elements) > 1
-                        else None
+                    map_order_header(
+                        order, segment_id, segment_elements, file_line_number
                     )
+
                 elif segment_id in ["N3", "N4"] and address_type != "ST":
                     continue
                 else:
