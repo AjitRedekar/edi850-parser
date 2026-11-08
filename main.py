@@ -5,6 +5,7 @@ from dataclasses import asdict
 
 # custom imports
 from edi850 import parse_850
+from api_post import post_order
 
 
 def print_po_lines(po_lines):
@@ -47,3 +48,7 @@ if __name__ == "__main__":
 
     with open(pi_output_file, "w") as out:
         json.dump(asdict(order), out, indent=2, default=str)
+
+    post_order(
+        json.dumps(asdict(order), indent=2, default=str)
+    )  # Post the order to the API endpoint
