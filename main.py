@@ -49,6 +49,5 @@ if __name__ == "__main__":
     with open(pi_output_file, "w") as out:
         json.dump(asdict(order), out, indent=2, default=str)
 
-    post_order(
-        json.dumps(asdict(order), indent=2, default=str)
-    )  # Post the order to the API endpoint
+    payload = json.loads(json.dumps(asdict(order), default=str))
+    post_order(payload)  # Post the order to the API endpoint

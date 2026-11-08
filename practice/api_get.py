@@ -13,9 +13,9 @@ try:
 
 except requests.Timeout:
     print("Server did not respond in time; safe to retry.")
+except requests.HTTPError as e:
+    print(f"Server returned an error: {e}")
 except requests.JSONDecodeError:
     print(f"Response was not JSON: {response.text[:200]!r}")
 except requests.RequestException as e:
     print(f"Request failed: {e}")  # timeouts, no network, bad URL
-except requests.HTTPError as e:
-    print(f"Server returned an error: {e}")
