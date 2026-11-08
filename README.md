@@ -13,7 +13,7 @@ main.py is a Python script that parses EDI 850 Purchase Order files.
 edi850-parser/
 ├── edi_maps.py      # the two map dictionaries only
 ├── edi850.py        # parse_segment, map_order_header, map_order_detail, is_850_file, parse_850
-├── models.py        # the data models: Order, ShipTo, Line
+├── models.py        # the data models: Order, Address and OrderLine
 └── main.py          # the __main__ part: arguments, print_po_lines, JSON output
 
 ```

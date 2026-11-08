@@ -72,10 +72,7 @@ def map_order_detail(segment_id, segment_elements, current_line, file_line_numbe
                             segment_elements[segment_elements.index(qualifier) + 1],
                         )
                     else:
-                        if current_line is not None:
-                            setattr(
-                                current_line, element[0], segment_elements[position]
-                            )
+                        setattr(current_line, element[0], segment_elements[position])
 
                 except (ValueError, InvalidOperation, IndexError) as e:
                     print(f"Line {file_line_number}: skipped PO1 ({e})")
@@ -128,7 +125,7 @@ def parse_850(file_path):
                     else:
                         current_line = None
 
-                elif segment_id == "PID":
+                elif segment_id == "PID" and current_line is not None:
                     map_order_detail(
                         segment_id, segment_elements, current_line, file_line_number
                     )
