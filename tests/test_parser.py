@@ -1,5 +1,6 @@
 from pathlib import Path
 from decimal import Decimal
+from datetime import date
 
 import pytest
 
@@ -40,6 +41,17 @@ def test_missing_file_raises():
 def test_extended_value():
     line = OrderLine(line_no=1, qty=24, uom="EA", price=Decimal("12.50"))
     assert line.extended_value() == Decimal("300.00")
+
+
+def test_first_line_values():
+    order = parse_850(DATA / "sample.850")
+    assert order.po_date == date(2026, 10, 23)
+    line = order.lines[0]
+    assert line.qty == 24
+    assert line.uom == "EA"
+    assert line.price == Decimal("12.50")
+    assert line.item == "WC-1001"
+    assert line.description == "BLUE WIDGET 10MM"
 
 
 @pytest.mark.parametrize(
