@@ -4,3 +4,4 @@ order.json
 out.json
 edi850 try1.py.bak
 .env
+.pytest_cache/

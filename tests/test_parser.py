@@ -10,19 +10,36 @@ DATA = Path(__file__).parent / "data"
 
 
 def test_header_fields():
-    """Test that the header fields are correctly parsed and mapped to the Order object."""
     order = parse_850(DATA / "sample.850")
-
     assert order.po_number == "4500123456"
     assert order.ship_to.city == "COLUMBUS"
 
+
+def test_bill_to_does_not_overwrite_ship_to():
     order = parse_850(DATA / "bill_to.850")
-    assert order.po_number == "4500123456"
     assert order.ship_to.name == "ACME RETAIL DC 7"
     assert order.ship_to.city == "COLUMBUS"
 
-    order = parse_850(DATA / "not_850.850")
-    assert order == None
+
+def test_short_N4_gets_city():
+    order = parse_850(DATA / "short_n4.850")
+    assert order.ship_to.city == "COLUMBUS"
+    assert order.ship_to.state is None
+    assert order.ship_to.zip is None
+
+
+def test_not_850_returns_none():
+    assert parse_850(DATA / "not_850.850") is None
+
+
+def test_missing_file_raises():
+    with pytest.raises(FileNotFoundError):
+        parse_850(DATA / "does_not_exist.850")
+
+
+def test_extended_value():
+    line = OrderLine(line_no=1, qty=24, uom="EA", price=Decimal("12.50"))
+    assert line.extended_value() == Decimal("300.00")
 
 
 @pytest.mark.parametrize(
