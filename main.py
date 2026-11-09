@@ -35,6 +35,14 @@ if __name__ == "__main__":
         )
         raise SystemExit(1)  # Exit the program if no file path is provided
 
+    url = os.environ.get(
+        "ORDER_API_URL", "https://httpbin.org/post"
+    )  # Default to httpbin for testing
+    api_key = os.environ.get("ORDER_API_KEY")  # None if not found.
+    if not api_key:
+        print("Missing ORDER_API_KEY in environment variables.")
+        raise SystemExit(1)  # Exit the program if the API key is not found
+
     try:
         order = parse_850(pi_input_file)
     except OSError as e:
@@ -55,15 +63,7 @@ if __name__ == "__main__":
 
     payload = json.loads(json.dumps(asdict(order), default=str))
 
-    url = os.environ.get(
-        "ORDER_API_URL", "https://httpbin.org/post"
-    )  # Default to httpbin for testing
-    api_key = os.environ.get("ORDER_API_KEY")  # None if not found.
-    if api_key is None:
-        print("Missing ORDER_API_KEY in environment variables.")
-        raise SystemExit(1)  # Exit the program if the API key is not found
-
-    elif post_order(url, api_key, payload):
+    if post_order(url, api_key, payload):
         # Post the order to the API endpoint
         print(f"Order posted successfully.")
     else:

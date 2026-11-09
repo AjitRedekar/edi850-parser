@@ -8,6 +8,9 @@ main.py is a Python script that parses EDI 850 Purchase Order files.
   - the script parse only ship to address, it does not parse bill to address.
   - EDI 850 document is expected to be in format X12 004010 with * and ~ delimiters
 
+* configuration:
+  - refer .env.example file as an example configuration of API endpoint and API key
+
 * program structure:
 ```text
 edi850-parser/
