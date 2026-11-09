@@ -3,3 +3,4 @@ __pycache__/
 order.json
 out.json
 edi850 try1.py.bak
+.env

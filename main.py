@@ -1,7 +1,11 @@
 # standard library imports
 import sys
 import json
+import os
 from dataclasses import asdict
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
 
 # custom imports
 from edi850 import parse_850
@@ -50,4 +54,17 @@ if __name__ == "__main__":
         json.dump(asdict(order), out, indent=2, default=str)
 
     payload = json.loads(json.dumps(asdict(order), default=str))
-    post_order(payload)  # Post the order to the API endpoint
+
+    url = os.environ.get(
+        "ORDER_API_URL", "https://httpbin.org/post"
+    )  # Default to httpbin for testing
+    api_key = os.environ.get("ORDER_API_KEY")  # None if not found.
+    if api_key is None:
+        print("Missing ORDER_API_KEY in environment variables.")
+        raise SystemExit(1)  # Exit the program if the API key is not found
+
+    elif post_order(url, api_key, payload):
+        # Post the order to the API endpoint
+        print(f"Order posted successfully.")
+    else:
+        raise SystemExit(1)  # Exit the program if the order post fails
