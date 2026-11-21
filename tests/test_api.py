@@ -13,7 +13,7 @@ class FakeResponse:
 
     def raise_for_status(self):
         if self.status_code >= 400:
-            raise requests.HTTPError(f"[self.status_code] error")
+            raise requests.HTTPError(f"{self.status_code} error")
 
     def json(self):
         return self._body
@@ -45,9 +45,7 @@ def test_post_server_error_returns_false(monkeypatch):
 
     monkeypatch.setattr(requests, "post", fake_post)
 
-    result = post_order(
-        "https://example.fake500test/orders", "key-321", {"po_number": "1"}
-    )
+    result = post_order("https://example.test/orders", "key-321", {"po_number": "1"})
 
     assert result is False
     assert len(calls) == 1
@@ -55,23 +53,13 @@ def test_post_server_error_returns_false(monkeypatch):
     assert calls[0]["json"] == {"po_number": "1"}
 
 
-def test_post_timeout_returns_false(monkeypatch):
-    calls = []
-
-    def fake_post(url, json, headers, timeout):
-        calls.append(
-            {"url": url, "json": json, "headers": headers, "timeout": "too_slow"}
-        )
-        return FakeResponse(404, {})
+def test_post_timeout_returns_false(monkeypatch, capsys):
+    def fake_post(*args, **kwargs):
+        raise requests.Timeout("too slow")
 
     monkeypatch.setattr(requests, "post", fake_post)
 
-    result = post_order(
-        "https://example.fake500test/orders", "key-321", {"po_number": "1"}
-    )
+    result = post_order("https://example.test/orders", "key", {"po_number": "1"})
 
     assert result is False
-    assert calls[0]["timeout"] == "too_slow"
-    assert len(calls) == 1
-    assert calls[0]["headers"]["Authorization"] == "Bearer key-321"
-    assert calls[0]["json"] == {"po_number": "1"}
+    assert "safe to retry" in capsys.readouterr().out
