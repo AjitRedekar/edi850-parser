@@ -95,3 +95,10 @@ def test_problems_detected(file_name, expected_problems):
     order = parse_850(DATA / file_name)
     problems = valiate_order(order)
     assert [problem for problem in problems] == expected_problems
+
+
+def test_problem_for_good_data():
+    order = parse_850(DATA / "sample.850")
+    order.lines[2].qty = 1
+    problems = valiate_order(order)
+    assert len(problems) == 0
