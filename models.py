@@ -33,3 +33,4 @@ class Order:
     ship_to: Address = field(default_factory=Address)
     lines: list[OrderLine] = field(default_factory=list)
     guid: str | None = None
+    declared_line_count: int | None = None

@@ -32,6 +32,8 @@ def map_order_header(order, segment_id, segment_elements, file_line_number):
                                 segment_elements[position], "%Y%m%d"
                             ).date(),
                         )  # convert to date object
+                    elif el_type == "int":
+                        setattr(order, element[0], int(segment_elements[position]))
                     else:
                         setattr(order, element[0], segment_elements[position])
 

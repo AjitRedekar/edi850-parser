@@ -10,6 +10,7 @@ load_dotenv()  # Load environment variables from .env file
 # custom imports
 from edi850 import parse_850
 from api_post import post_order
+from validate import valiate_order
 
 
 def print_po_lines(po_lines):
@@ -22,6 +23,14 @@ def print_po_lines(po_lines):
             f"{line.line_no:>4} {line.qty:>5} {line.uom:<4} "
             f"{line.price:>8.2f} {line.extended_value() :>10.2f}"
         )  # total price
+
+
+def print_problems(problems):
+    """Prints problems detected during validation."""
+    if len(problems) > 0:
+        print("problem/s detected as below:")
+        for problem in problems:
+            print(problem)
 
 
 if __name__ == "__main__":
@@ -60,6 +69,12 @@ if __name__ == "__main__":
 
     with open(pi_output_file, "w") as out:
         json.dump(asdict(order), out, indent=2, default=str)
+
+    problems = valiate_order(order)
+    print_problems(problems)
+    if len(problems) > 0:
+        print("order not posted due to problems detected.")
+        raise SystemExit(2)  # exit the program if validation failed
 
     payload = json.loads(json.dumps(asdict(order), default=str))
 

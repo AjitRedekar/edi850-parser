@@ -21,6 +21,7 @@ EDI850_ORDER_HEADER_MAP = {
         "ship_to",
         "zip",
     ),
+    ("CTT", 0, "int"): ("declared_line_count",),
 }
 
 EDI850_ORDER_DETAIL_MAP = {
