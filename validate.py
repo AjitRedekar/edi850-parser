@@ -1,4 +1,4 @@
-def valiate_order(order):
+def validate_order(order):
     """return list of problems found in the order. empty means valid."""
     problems = []
 
@@ -15,7 +15,10 @@ def valiate_order(order):
         if line.price <= 0:
             problems.append(f"Line {line.line_no}: price is {line.price}")
 
-    if order.declared_line_count != len(order.lines):
+    if order.declared_line_count == None:
+        problems.append("Missing CTT segment")
+
+    elif order.declared_line_count != len(order.lines):
         problems.append(
             f"declared line count {order.declared_line_count} not matching with number of lines {len(order.lines)} processed"
         )
