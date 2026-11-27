@@ -4,6 +4,7 @@ import json
 import os
 from dataclasses import asdict
 from dotenv import load_dotenv
+import sqlite3
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -11,6 +12,7 @@ load_dotenv()  # Load environment variables from .env file
 from edi850 import parse_850
 from api_post import post_order
 from validate import validate_order
+from db import init_db, save_order
 
 
 def print_po_lines(po_lines):
@@ -76,10 +78,18 @@ if __name__ == "__main__":
         print("order not posted due to problems detected.")
         raise SystemExit(2)  # exit the program if validation failed
 
+    conn = sqlite3.connect("orders.db")
+    init_db(conn)
+    try:
+        save_order(conn, order)
+    except sqlite3.IntegrityError:
+        print("PO already loaded")
+        raise SystemExit(3)  # duplicate PO
+
     payload = json.loads(json.dumps(asdict(order), default=str))
 
     if post_order(url, api_key, payload):
         # Post the order to the API endpoint
-        print(f"Order posted successfully.")
+        print("Order posted successfully.")
     else:
         raise SystemExit(1)  # Exit the program if the order post fails
