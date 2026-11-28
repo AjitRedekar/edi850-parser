@@ -12,7 +12,7 @@ load_dotenv()  # Load environment variables from .env file
 from edi850 import parse_850
 from api_post import post_order
 from validate import validate_order
-from db import init_db, save_order
+from db import init_db, save_order, order_summary
 
 
 def print_po_lines(po_lines):

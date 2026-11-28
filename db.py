@@ -7,7 +7,7 @@ from models import Address, Order, OrderLine
 
 SCHEMA = """
 create table if not exists order_header (
-    guid text primary_key,
+    guid text primary key,
     po_number text unique not null,
     po_date text,
     ship_name text,
@@ -47,7 +47,7 @@ def save_order(conn: sqlite3.Connection, order: Order) -> None:
             (
                 order.guid,
                 order.po_number,
-                str(order.po_date),
+                order.po_date.isoformat() if order.po_date else None,
                 order.ship_to.name,
                 order.ship_to.address,
                 order.ship_to.city,
@@ -111,3 +111,24 @@ def load_order(conn: sqlite3.Connection, guid: str) -> Order | None:
             )
         )
     return order
+
+
+def order_summary(conn: sqlite3.Connection):
+    conn.row_factory = sqlite3.Row
+    po_summary = []
+    for row in conn.execute(
+        "select h.guid, h.po_number, count(l.line_no) as line_count "
+        "from order_header h "
+        "join order_line l on h.guid = l.guid "
+        "group by h.guid "
+        "order by po_number "
+    ):
+        po_summary.append(
+            (
+                row["guid"],
+                row["po_number"],
+                row["line_count"],
+            )
+        )
+
+    return po_summary
